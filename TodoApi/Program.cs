@@ -1,6 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.IO;
+using System.Reflection;
 using TodoApi.Repositories;
+using TodoApi.Filters;
+using Microsoft.OpenApi;
 
 namespace TodoApi
 {
@@ -8,21 +13,42 @@ namespace TodoApi
     {
         static void Main(string[] args)
         {
-            // Criar um Builder de uma Web Application (Web Application é complexa -> Então usados o padrão
-            //  Builder)
             var builder = WebApplication.CreateBuilder();
 
-            // Configurar serviços (Injeção de Dependência)
-            builder.Services.AddControllers();
+            // Controllers + global exception filter
+            builder.Services.AddControllers(opt =>
+            {
+                opt.Filters.Add<ProblemDetailsExceptionFilter>();
+            });
+
             builder.Services.AddScoped<ITodoRepository, TodoRepository>();
             builder.Services.AddDbContext<TodoDbContext>();
 
-            // Constroi a aplicação (builder.Build())
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Todo API",
+                    Version = "v1",
+                    Description = "A simple Todo API with CRUD endpoints."
+                });
+                c.EnableAnnotations();
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                if (File.Exists(xmlPath))
+                    c.IncludeXmlComments(xmlPath, true);
+            });
+
             var app = builder.Build();
 
-            app.MapControllers();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
+            });
 
-            // Roda aplicação
+            app.MapControllers();
             app.Run();
         }
     }

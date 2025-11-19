@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 using TodoApi.Models;
 
@@ -19,6 +20,9 @@ namespace TodoApi.Repositories
 
         public Todo GetById(int id)
         {
+            if (id == 2)
+                throw new System.Exception("O ID era 2 :P");
+
             //first or default
             return dbContext.Todos.Find(id);
         }
