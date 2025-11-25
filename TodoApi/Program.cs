@@ -13,6 +13,8 @@ namespace TodoApi
     {
         static void Main(string[] args)
         {
+            const string CORS_NAME = "PoliticaPermissiva";
+
             var builder = WebApplication.CreateBuilder();
 
             // Controllers + global exception filter
@@ -40,8 +42,16 @@ namespace TodoApi
                     c.IncludeXmlComments(xmlPath, true);
             });
 
+            builder.Services.AddCors(option => option.AddPolicy(CORS_NAME, policy => {
+                policy
+                .WithOrigins("http://localhost:3000")
+                .WithMethods("GET", "OPTIONS", "PUT", "DELETE")
+                .AllowAnyHeader();
+            }));
+                
             var app = builder.Build();
 
+            app.UseCors(CORS_NAME);
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
