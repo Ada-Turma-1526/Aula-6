@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using TodoApi.Filters;
 using TodoApi.Middlewares;
+using TodoApi.Options;
 using TodoApi.Repositories;
 
 namespace TodoApi
@@ -18,7 +19,8 @@ namespace TodoApi
 
             var builder = WebApplication.CreateBuilder();
 
-            builder.Services.Configure<MaintenantanceOptions>(builder.Configuration.GetSection(MaintenantanceOptions.MaintenantanceSection));
+            builder.Services.Configure<MaintenantanceOptions>(builder.Configuration.GetSection(MaintenantanceOptions.SectionName));
+            builder.Services.Configure<IpAllowListOptions>(builder.Configuration.GetSection(IpAllowListOptions.SectionName));
 
             // Controllers + global exception filter
             builder.Services.AddControllers(opt =>
@@ -53,6 +55,7 @@ namespace TodoApi
             }));
                 
             var app = builder.Build();
+            app.UseMiddleware<IpAccessControlMiddleware>();
             app.UseMiddleware<MaintenanceMiddleware>();
 
             app.UseCors(CORS_NAME);
